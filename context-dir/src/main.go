@@ -13,8 +13,23 @@ func (m *Test) AbsolutePath(
 	return dir
 }
 
+func (m *Test) AbsolutePathSubdir(
+	// +defaultPath="/data"
+	dir *dagger.Directory,
+) *dagger.Directory {
+	return dir
+}
+
 func (m *Test) RelativePath(
 	// +defaultPath="."
+	dir *dagger.Directory,
+) *dagger.Directory {
+	return dir
+}
+
+
+func (m *Test) RelativePathSubdir(
+	// +defaultPath="./data/subdir"
 	dir *dagger.Directory,
 ) *dagger.Directory {
 	return dir
