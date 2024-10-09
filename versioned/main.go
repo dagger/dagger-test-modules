@@ -3,5 +3,5 @@ package main
 type Versioned struct{}
 
 func (m *Versioned) Hello() string {
-	return "version 2"
+	return "version 3"
 }
