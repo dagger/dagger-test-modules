@@ -1,6 +1,6 @@
 {
   "name": "cool-sdk",
+  "engineVersion": "v0.15.1",
   "sdk": "go",
-  "source": "dagger",
-  "engineVersion": "v0.11.9"
+  "source": "dagger"
 }
