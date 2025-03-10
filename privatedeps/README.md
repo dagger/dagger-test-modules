@@ -1,0 +1,1 @@
+This fixture help us to test the private dependency in Dagger integration tests. Please note that this is not a dagger module dependency, instead it is a dependency at golang level.
