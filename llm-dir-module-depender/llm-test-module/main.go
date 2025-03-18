@@ -1,5 +1,5 @@
 // A generated module for Llm functions
-// this module is necessary for testing allow-llm policy enforcement around git-sourced modules
+// This module is necessary for testing allow-llm policy enforcement around git-sourced modules and is called by its parent LlmDirModuleDepender
 package main
 
 import (
