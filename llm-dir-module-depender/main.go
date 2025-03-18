@@ -21,3 +21,7 @@ func New(
 func (m *LlmDirModuleDepender) PromptDep(ctx context.Context, stringArg string) (string, error) {
 	return dag.LlmTestModule(dagger.LlmTestModuleOpts{Model: m.Model}).Prompt(ctx, stringArg)
 }
+
+func (m *LlmDirModuleDepender) Save(ctx context.Context, stringArg string) (string, error) {
+	return dag.LlmTestModule(dagger.LlmTestModuleOpts{Model: m.Model}).Save(ctx, stringArg)
+}
