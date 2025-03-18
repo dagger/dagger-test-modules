@@ -1,0 +1,7 @@
+{
+    "name": "llm-test-module",
+    "engineVersion": "v0.17.1-010101000000-dev-4b4b624317ea",
+    "sdk": {
+        "source": "go"
+    }
+}
