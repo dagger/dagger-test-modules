@@ -5,6 +5,8 @@ package main
 import (
 	"context"
 	"dagger/llm/internal/dagger"
+
+	"github.com/google/uuid"
 )
 
 type LlmTestModule struct {
@@ -28,5 +30,5 @@ func (m *LlmTestModule) Save(ctx context.Context, stringArg string) (string, err
 }
 
 func (m LlmTestModule) llm(stringArg string) *dagger.LLM {
-	return dag.Llm(dagger.LlmOpts{Model: m.Model}).WithPrompt(stringArg)
+	return dag.Llm(dagger.LlmOpts{Model: m.Model}).WithPrompt(stringArg).SetString("CACHE_BUSTER", uuid.NewString())
 }
