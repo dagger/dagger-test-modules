@@ -1,13 +1,13 @@
 {
-  "name": "llm-dir-module-depender",
-  "engineVersion": "v0.17.1-010101000000-dev-98a6e470f3d0",
-  "sdk": {
-    "source": "go"
-  },
-  "dependencies": [
-    {
-      "name": "llm-test-module",
-      "source": "llm-test-module"
-    }
-  ]
+    "name": "llm-dir-module-depender",
+    "engineVersion": "v0.17.0",
+    "sdk": {
+        "source": "go"
+    },
+    "dependencies": [
+        {
+            "name": "llm-test-module",
+            "source": "llm-test-module"
+        }
+    ]
 }
