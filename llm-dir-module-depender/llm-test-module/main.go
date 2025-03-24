@@ -9,26 +9,26 @@ import (
 	"github.com/google/uuid"
 )
 
-type LLMTestModule struct {
+type LlmTestModule struct {
 	Model string // +private
 }
 
 func New(
 	model string, // +optional
-) *LLMTestModule {
-	return &LLMTestModule{model}
+) *LlmTestModule {
+	return &LlmTestModule{model}
 }
 
 // access the LLM api in the most minimal way: prompt it, then retrieve history
-func (m *LLMTestModule) Prompt(ctx context.Context, stringArg string) (string, error) {
+func (m *LlmTestModule) Prompt(ctx context.Context, stringArg string) (string, error) {
 	return m.llm(stringArg).LastReply(ctx)
 }
 
 // this is a hack until we can return the LLM type and replay history
-func (m *LLMTestModule) Save(ctx context.Context, stringArg string) (string, error) {
+func (m *LlmTestModule) Save(ctx context.Context, stringArg string) (string, error) {
 	return m.llm(stringArg).HistoryJSON(ctx)
 }
 
-func (m LLMTestModule) llm(stringArg string) *dagger.LLM {
+func (m LlmTestModule) llm(stringArg string) *dagger.LLM {
 	return dag.LLM(dagger.LLMOpts{Model: m.Model}).WithPrompt(stringArg).SetString("CACHE_BUSTER", uuid.NewString())
 }
