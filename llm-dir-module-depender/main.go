@@ -7,21 +7,21 @@ import (
 	"dagger/llm-dir-module-depender/internal/dagger"
 )
 
-type LlmDirModuleDepender struct {
+type LLMDirModuleDepender struct {
 	Model string // +private
 }
 
 func New(
 	model string, // +optional
-) *LlmDirModuleDepender {
-	return &LlmDirModuleDepender{model}
+) *LLMDirModuleDepender {
+	return &LLMDirModuleDepender{model}
 }
 
 // Returns a container that echoes whatever string argument is provided
-func (m *LlmDirModuleDepender) PromptDep(ctx context.Context, stringArg string) (string, error) {
-	return dag.LlmTestModule(dagger.LlmTestModuleOpts{Model: m.Model}).Prompt(ctx, stringArg)
+func (m *LLMDirModuleDepender) PromptDep(ctx context.Context, stringArg string) (string, error) {
+	return dag.LLMTestModule(dagger.LLMTestModuleOpts{Model: m.Model}).Prompt(ctx, stringArg)
 }
 
-func (m *LlmDirModuleDepender) Save(ctx context.Context, stringArg string) (string, error) {
-	return dag.LlmTestModule(dagger.LlmTestModuleOpts{Model: m.Model}).Save(ctx, stringArg)
+func (m *LLMDirModuleDepender) Save(ctx context.Context, stringArg string) (string, error) {
+	return dag.LLMTestModule(dagger.LLMTestModuleOpts{Model: m.Model}).Save(ctx, stringArg)
 }
