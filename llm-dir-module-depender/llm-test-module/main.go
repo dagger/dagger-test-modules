@@ -30,5 +30,8 @@ func (m *LlmTestModule) Save(ctx context.Context, stringArg string) (string, err
 }
 
 func (m LlmTestModule) llm(stringArg string) *dagger.LLM {
-	return dag.LLM(dagger.LLMOpts{Model: m.Model}).WithPrompt(stringArg).SetString("CACHE_BUSTER", uuid.NewString())
+	return dag.
+		LLM(dagger.LLMOpts{Model: m.Model}).
+		WithEnv(dag.Env().WithStringInput("CACHE_BUSTER", uuid.NewString(), "a random string only meant for busting caches, not actual use.")).
+		WithPrompt(stringArg)
 }
