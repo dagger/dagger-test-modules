@@ -1,8 +1,16 @@
 package main
 
-import "main/internal/dagger"
+import (
+	"context"
+
+	"main/internal/dagger"
+)
 
 type CoolSdk struct{}
+
+func (m *CoolSdk) ModuleDefs(ctx context.Context, modSource *dagger.ModuleSource, introspectionJSON *dagger.File) (*dagger.Module, error) {
+	return modSource.WithSDK("go").AsModule(), nil
+}
 
 func (m *CoolSdk) ModuleRuntime(modSource *dagger.ModuleSource, introspectionJson *dagger.File) *dagger.Container {
 	return modSource.WithSDK("go").AsModule().Runtime().WithEnvVariable("COOL", "true")
