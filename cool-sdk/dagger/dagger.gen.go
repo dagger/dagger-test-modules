@@ -9,11 +9,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sort"
 
 	"github.com/vektah/gqlparser/v2/gqlerror"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.25.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.37.0"
 	"go.opentelemetry.io/otel/trace"
 
 	"main/internal/dagger"
@@ -83,12 +84,27 @@ func main() {
 	}
 }
 
-func unwrapError(rerr error) string {
+func convertError(rerr error) *dagger.Error {
 	var gqlErr *gqlerror.Error
 	if errors.As(rerr, &gqlErr) {
-		return gqlErr.Message
+		dagErr := dag.Error(gqlErr.Message)
+		if gqlErr.Extensions != nil {
+			keys := make([]string, 0, len(gqlErr.Extensions))
+			for k := range gqlErr.Extensions {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				val, err := json.Marshal(gqlErr.Extensions[k])
+				if err != nil {
+					fmt.Println("failed to marshal error value:", err)
+				}
+				dagErr = dagErr.WithValue(k, dagger.JSON(val))
+			}
+		}
+		return dagErr
 	}
-	return rerr.Error()
+	return dag.Error(rerr.Error())
 }
 
 func dispatch(ctx context.Context) (rerr error) {
@@ -107,8 +123,8 @@ func dispatch(ctx context.Context) (rerr error) {
 	fnCall := dag.CurrentFunctionCall()
 	defer func() {
 		if rerr != nil {
-			if err := fnCall.ReturnError(ctx, dag.Error(unwrapError(rerr))); err != nil {
-				fmt.Println("failed to return error:", err)
+			if err := fnCall.ReturnError(ctx, convertError(rerr)); err != nil {
+				fmt.Println("failed to return error:", err, "\noriginal error:", rerr)
 			}
 		}
 	}()
@@ -166,20 +182,48 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 	switch parentName {
 	case "CoolSdk":
 		switch fnName {
-		case "ModuleRuntime":
+		case "ModuleDefs":
 			var parent CoolSdk
 			err = json.Unmarshal(parentJSON, &parent)
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var modSource *any
+			var modSource *dagger.ModuleSource
 			if inputArgs["modSource"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["modSource"]), &modSource)
 				if err != nil {
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg modSource", err))
 				}
 			}
-			var introspectionJson *any
+			var introspectionJson *dagger.File
+			if inputArgs["introspectionJSON"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["introspectionJSON"]), &introspectionJson)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg introspectionJSON", err))
+				}
+			}
+			var outputFilePath string
+			if inputArgs["outputFilePath"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["outputFilePath"]), &outputFilePath)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg outputFilePath", err))
+				}
+			}
+			return (*CoolSdk).ModuleDefs(&parent, ctx, modSource, introspectionJson, outputFilePath)
+		case "ModuleRuntime":
+			var parent CoolSdk
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var modSource *dagger.ModuleSource
+			if inputArgs["modSource"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["modSource"]), &modSource)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg modSource", err))
+				}
+			}
+			var introspectionJson *dagger.File
 			if inputArgs["introspectionJson"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["introspectionJson"]), &introspectionJson)
 				if err != nil {
@@ -193,14 +237,14 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var modSource *any
+			var modSource *dagger.ModuleSource
 			if inputArgs["modSource"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["modSource"]), &modSource)
 				if err != nil {
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg modSource", err))
 				}
 			}
-			var introspectionJson *any
+			var introspectionJson *dagger.File
 			if inputArgs["introspectionJson"] != nil {
 				err = json.Unmarshal([]byte(inputArgs["introspectionJson"]), &introspectionJson)
 				if err != nil {
@@ -221,23 +265,30 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 	case "":
 		return dag.Module().
 			WithObject(
-				dag.TypeDef().WithObject("CoolSdk", dagger.TypeDefWithObjectOpts{SourceMap: dag.SourceMap("main.go", 5, 6)}).
+				dag.TypeDef().WithObject("CoolSdk", dagger.TypeDefWithObjectOpts{SourceMap: dag.SourceMap("main.go", 10, 6)}).
+					WithFunction(
+						dag.Function("ModuleDefs",
+							dag.TypeDef().WithObject("Container")).
+							WithSourceMap(dag.SourceMap("main.go", 12, 1)).
+							WithArg("modSource", dag.TypeDef().WithObject("ModuleSource"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 12, 51)}).
+							WithArg("introspectionJSON", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 12, 83)}).
+							WithArg("outputFilePath", dag.TypeDef().WithKind(dagger.TypeDefKindStringKind), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 12, 115)})).
 					WithFunction(
 						dag.Function("ModuleRuntime",
-							dag.TypeDef().WithKind(dagger.TypeDefKindVoidKind).WithOptional(true)).
-							WithSourceMap(dag.SourceMap("main.go", 7, 1)).
-							WithArg("modSource", dag.TypeDef().WithKind(dagger.TypeDefKindVoidKind).WithOptional(true), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 7, 33)}).
-							WithArg("introspectionJson", dag.TypeDef().WithKind(dagger.TypeDefKindVoidKind).WithOptional(true), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 7, 58)})).
+							dag.TypeDef().WithObject("Container")).
+							WithSourceMap(dag.SourceMap("main.go", 30, 1)).
+							WithArg("modSource", dag.TypeDef().WithObject("ModuleSource"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 30, 33)}).
+							WithArg("introspectionJson", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 30, 65)})).
 					WithFunction(
 						dag.Function("Codegen",
-							dag.TypeDef().WithKind(dagger.TypeDefKindVoidKind).WithOptional(true)).
-							WithSourceMap(dag.SourceMap("main.go", 11, 1)).
-							WithArg("modSource", dag.TypeDef().WithKind(dagger.TypeDefKindVoidKind).WithOptional(true), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 11, 27)}).
-							WithArg("introspectionJson", dag.TypeDef().WithKind(dagger.TypeDefKindVoidKind).WithOptional(true), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 11, 52)})).
+							dag.TypeDef().WithObject("GeneratedCode")).
+							WithSourceMap(dag.SourceMap("main.go", 34, 1)).
+							WithArg("modSource", dag.TypeDef().WithObject("ModuleSource"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 34, 27)}).
+							WithArg("introspectionJson", dag.TypeDef().WithObject("File"), dagger.FunctionWithArgOpts{SourceMap: dag.SourceMap("main.go", 34, 59)})).
 					WithFunction(
 						dag.Function("RequiredPaths",
 							dag.TypeDef().WithListOf(dag.TypeDef().WithKind(dagger.TypeDefKindStringKind))).
-							WithSourceMap(dag.SourceMap("main.go", 15, 1)))), nil
+							WithSourceMap(dag.SourceMap("main.go", 38, 1)))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}
