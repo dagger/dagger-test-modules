@@ -9,7 +9,7 @@ import (
 
 type CoolSdk struct{}
 
-func (m *CoolSdk) ModuleDefs(ctx context.Context, modSource *dagger.ModuleSource, introspectionJSON *dagger.File, outputFilePath string) (*dagger.Container, error) {
+func (m *CoolSdk) ModuleTypes(ctx context.Context, modSource *dagger.ModuleSource, introspectionJSON *dagger.File, outputFilePath string) (*dagger.Container, error) {
 	mod := modSource.WithSDK("go").AsModule()
 	modID, err := mod.ID(ctx)
 	if err != nil {
