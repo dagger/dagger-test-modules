@@ -1,23 +1,23 @@
 // Package greeter reproduces a bug where a toolchain-style module loaded
-// via a remote git ref cannot walk into a workspace subdirectory through a
-// Directory argument annotated with defaultPath="/" + ignore patterns.
+// via a remote git ref cannot walk into a workspace *sub-sub*-directory
+// through a Directory argument annotated with defaultPath="/" + ignore
+// patterns.
 //
 // When loaded as github.com/dagger/dagger-test-modules/workspace-default-path/greeter@<ref>,
-// the module's defaultPath="/" must resolve to the repo root (where .git and
-// the root dagger.json live). The ignore patterns exclude everything except
-// workspace-default-path/target-subdir/, so workspace.Directory(
-// "workspace-default-path/target-subdir") must return a directory whose
-// contents include hello.txt.
-//
-// This mirrors toolchains/java-sdk-dev's production pattern:
+// the module's defaultPath="/" must resolve to the repo root. The ignore
+// patterns un-exclude `workspace-default-path/target-subdir/` (the parent)
+// and the function then accesses
+// `workspace-default-path/target-subdir/maven` — a sub-directory of the
+// un-excluded parent that is itself never named in the pattern list.
+// That's the exact shape of the java-sdk-dev production failure:
 //
 //	pub workspace: Directory! @defaultPath(path: "/") @ignorePatterns(patterns: [
 //	    "*",
-//	    "!sdk/java/runtime/images/",
+//	    "!sdk/java/runtime/images/",      // un-exclude a parent
 //	    ...
 //	])
 //
-//	workspace.directory("sdk/java/runtime/images/maven")
+//	workspace.directory("sdk/java/runtime/images/maven")   // access sub of parent
 package main
 
 import (
@@ -47,7 +47,7 @@ func (m *Greeter) Read(
 		return "", err
 	}
 	return workspace.
-		Directory("workspace-default-path/target-subdir").
+		Directory("workspace-default-path/target-subdir/maven").
 		File("hello.txt").
 		Contents(ctx)
 }
@@ -81,7 +81,7 @@ func (m *Greeter) ReadCheck(
 		return err
 	}
 	_, err := workspace.
-		Directory("workspace-default-path/target-subdir").
+		Directory("workspace-default-path/target-subdir/maven").
 		File("hello.txt").
 		Contents(ctx)
 	return err
