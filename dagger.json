@@ -7,6 +7,12 @@
       "source": "dep"
     }
   ],
+  "toolchains": [
+    {
+      "name": "greeter",
+      "source": "workspace-default-path/greeter"
+    }
+  ],
   "source": "dagger",
   "engineVersion": "v0.11.9"
 }
