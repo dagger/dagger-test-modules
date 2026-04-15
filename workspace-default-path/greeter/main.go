@@ -32,12 +32,20 @@ type Greeter struct{}
 // into the workspace root (defaultPath="/") and then into the target
 // subdirectory. The ignore patterns must re-include that subdirectory for
 // Read to find the file.
+//
+// It also calls engine-dep (a relative dependency) to force the parent's
+// load path to actually resolve the sibling module — mirroring the
+// java-sdk-dev case where `../engine-dev` is fetched as part of the
+// toolchain load.
 func (m *Greeter) Read(
 	ctx context.Context,
 	// +defaultPath="/"
 	// +ignore=["*", "!workspace-default-path/target-subdir/"]
 	workspace *dagger.Directory,
 ) (string, error) {
+	if _, err := dag.EngineDep().Ping(ctx); err != nil {
+		return "", err
+	}
 	return workspace.
 		Directory("workspace-default-path/target-subdir").
 		File("hello.txt").
@@ -69,6 +77,9 @@ func (m *Greeter) ReadCheck(
 	// +ignore=["*", "!workspace-default-path/target-subdir/"]
 	workspace *dagger.Directory,
 ) error {
+	if _, err := dag.EngineDep().Ping(ctx); err != nil {
+		return err
+	}
 	_, err := workspace.
 		Directory("workspace-default-path/target-subdir").
 		File("hello.txt").
