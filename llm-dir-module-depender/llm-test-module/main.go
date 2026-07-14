@@ -21,12 +21,12 @@ func New(
 
 // access the LLM api in the most minimal way: prompt it, then retrieve history
 func (m *LlmTestModule) Prompt(ctx context.Context, stringArg string) (string, error) {
-	return m.llm(stringArg).LastReply(ctx)
+	return m.llm(stringArg).Loop().LastReply(ctx)
 }
 
 // this is a hack until we can return the LLM type and replay history
 func (m *LlmTestModule) Save(ctx context.Context, stringArg string) (string, error) {
-	return m.llm(stringArg).HistoryJSON(ctx)
+	return m.llm(stringArg).Loop().HistoryJSON(ctx)
 }
 
 func (m LlmTestModule) llm(stringArg string) *dagger.LLM {
