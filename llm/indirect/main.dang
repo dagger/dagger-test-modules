@@ -1,0 +1,16 @@
+"""
+This module depends on an LLM-using module, but doesn't touch the LLM API
+by itself. It exists for testing allow-llm policy enforcement around the
+dependencies of git-sourced modules.
+"""
+type LlmIndirect {
+  model: String = null
+
+  """
+  Prompt the LLM via the dependency and force evaluation by returning its
+  reply.
+  """
+  prompt(stringArg: String!, cacheBuster: String!): String! {
+    llmDirect(model: model).prompt(stringArg, cacheBuster)
+  }
+}

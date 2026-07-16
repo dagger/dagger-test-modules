@@ -1,0 +1,36 @@
+"""
+This module accesses the LLM API in the most minimal way. It exists for
+testing allow-llm policy enforcement around git-sourced modules that use
+the LLM directly, and is called by its sibling llm-indirect to cover the
+transitive case.
+"""
+type LlmDirect {
+  model: String = null
+
+  """
+  Prompt the LLM and force evaluation by returning its reply.
+  """
+  prompt(stringArg: String!, cacheBuster: String!): String! {
+    agent(stringArg, cacheBuster).lastReply
+  }
+
+  """
+  Prompt the LLM and return the conversation itself, so a caller can
+  inspect it (e.g. to record a replay of its messages).
+  """
+  agent(
+    stringArg: String!
+
+    """
+    A random string only meant for busting caches, not actual use. The
+    fork label keeps repeat evaluations distinct without polluting the
+    message history.
+    """
+    cacheBuster: String!
+  ): LLM! {
+    llm(model: model)
+      .fork(cacheBuster)
+      .withPrompt(stringArg)
+      .loop
+  }
+}
